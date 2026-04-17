@@ -185,6 +185,10 @@ def main():
     p_bt.add_argument("--capital", default=10000.0, type=float, help="Starting capital")
     p_bt.add_argument("--risk",    default=1.0, type=float, help="Risk per trade %%")
 
+    # quant
+    p_quant = subparsers.add_parser("quant", help="Full quant model (macro + technical + geo + engines)")
+    p_quant.add_argument("--json", "-j", action="store_true")
+
     # test
     p_test = subparsers.add_parser("test", help="Run test suite")
     p_test.add_argument("--stop-first", "-x", action="store_true")
@@ -212,6 +216,15 @@ def main():
 
     elif args.command == "test":
         cmd_test(args)
+
+    elif args.command == "quant":
+        from quant.master_signal import run as quant_run
+        from core.db import init_db
+        init_db()
+        result = quant_run(verbose=True)
+        if getattr(args, "json", False):
+            import json
+            print(json.dumps({k: v for k, v in result.items() if k not in ("engine_results",)}, indent=2, default=str))
 
     else:
         parser.print_help()
